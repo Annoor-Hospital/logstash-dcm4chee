@@ -1,14 +1,15 @@
 FROM logstash:8.17.2
 
 RUN /usr/share/logstash/bin/logstash-plugin install --version 5.0.0 logstash-codec-frame && \
-    /usr/share/logstash/bin/logstash-plugin install --version 6.4.3 logstash-filter-hashtree
+    /usr/share/logstash/bin/logstash-plugin install --version 6.4.3 logstash-filter-hashtree && \
+    /usr/share/logstash/bin/logstash-plugin install logstash-output-gelf
 
-COPY logstash.yml /etc/logstash.yml
+COPY logstash.yml /usr/share/logstash/config/logstash.yml
+COPY pipeline.conf /etc/pipeline.conf
 COPY certs /etc/certs
 
-ENV ELASTICSEARCH_HOST=elasticsearch \
-    ELASTICSEARCH_PORT=9200 \
-    ELASTICSEARCH_INDEX="logstash-%{type}-%{+YYYY.MM.dd}" \
+ENV GRAYLOG_HOST=graylog \
+    GRAYLOG_PORT=12201 \
     SYSLOG_UDP_PORT=8514 \
     SYSLOG_TCP_PORT=8514 \
     SYSLOG_TLS_PORT=6514 \
@@ -27,4 +28,4 @@ ENV ELASTICSEARCH_HOST=elasticsearch \
 COPY docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["logstash", "-f", "/etc/logstash.yml"]
+CMD ["logstash", "-f", "/etc/pipeline.conf"]
